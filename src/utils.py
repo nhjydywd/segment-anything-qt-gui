@@ -51,6 +51,11 @@ def imResizeUndeformed(image, width, height, inter=cv2.INTER_AREA):
     res[t_pad:t_pad+image.shape[0], l_pad:l_pad+image.shape[1]] = image
     return res
 
+def imRead(path, flag):
+    return cv2.imdecode(np.fromfile(path, dtype=np.uint8), flag)
+def imWrite(path, image):
+    cv2.imencode(".png", image)[1].tofile(path)
+
 def drawPrompts(image, points, point_labels, box):
 
     if not np.array_equal(points, None):

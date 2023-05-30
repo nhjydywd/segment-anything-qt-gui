@@ -1,5 +1,6 @@
 **/**.pth
 **/**.pyc
+**/**.pkl
 **/__pycache__
 workspace
 workspace_finished

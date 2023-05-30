@@ -467,7 +467,7 @@ class MainWindow(QMainWindow):
 
         # 读取图片
         path = os.path.join(self.dir_images(self.path_workspace), name_current)
-        self.image = cv2.imread(path, cv2.IMREAD_COLOR)
+        self.image = imRead(path, cv2.IMREAD_COLOR)
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
         self.background.createEmbeddings(self.image, name_current)
 
@@ -646,10 +646,10 @@ class MainWindow(QMainWindow):
             path_image = os.path.join(self.dir_images(self.path_workspace), name)
             
             # image
-            image = cv2.imread(path_image, cv2.IMREAD_COLOR)
+            image = imRead(path_image, cv2.IMREAD_COLOR)
             image_out = imResizeUndeformed(image, imageSize[0], imageSize[1]) if None not in imageSize else image
             path_out = os.path.join(self.dir_images(path_export), replacePostfix(name, "png"))
-            cv2.imwrite(path_out, image_out)
+            imWrite(path_out, image_out)
             # mask
             path_data = os.path.join(self.dir_data(self.path_workspace), replacePostfix(name, "pkl"))
             with open(path_data, "rb") as f:
@@ -661,7 +661,7 @@ class MainWindow(QMainWindow):
             mask_final = mergeMasks(ls_mask, ls_invert).astype("uint8")
             mask_final_out =  imResizeUndeformed(mask_final, maskSize[0], maskSize[1], cv2.INTER_NEAREST) if None not in maskSize else mask_final
             path_out = os.path.join(self.dir_masks(path_export), replacePostfix(name, "png"))
-            cv2.imwrite(path_out, mask_final_out*255, [int(cv2.IMWRITE_PNG_COMPRESSION), 9])
+            imWrite(path_out, mask_final_out*255)
             # segment
             if self.ckbExportExpand.isChecked():
                 step = 5
@@ -701,10 +701,10 @@ class MainWindow(QMainWindow):
             # segment = np.zeros((image_masked.shape[0], image_masked.shape[1], 3), dtype=np.uint8)
             # segment[mask_valid>0,3] = 255
             # segment[:,:,0:3] = image_masked
-            segment[mask_valid<=0,1] = 255
+            segment[mask_valid<=0,:] = 255
 
             path_out = os.path.join(self.dir_segments(path_export), replacePostfix(name, "png"))
-            cv2.imwrite(path_out, segment)
+            imWrite(path_out, segment)
         InformationDialog.showInfoWithButtons(self, title=self.tr("导出完成"), \
             ls_info=[self.tr(f"已将{len(ls_name_finished)}张图片的处理结果导出到{path_export}")], buttons=[self.tr("确定")])
 
