@@ -1,0 +1,5 @@
+**/**.pth
+**/**.pyc
+**/__pycache__
+workspace
+workspace_finished
