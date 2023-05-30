@@ -1,0 +1,6 @@
+numpy==1.22.3
+opencv_python==4.5.5.64
+PyQt5==5.15.9
+PyQt5_sip==12.11.0
+segment_anything==1.0
+torch==1.11.0
