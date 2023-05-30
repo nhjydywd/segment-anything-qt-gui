@@ -8,18 +8,20 @@ Qt gui application for Facebook's Segment Anything Model(SAM).
 - [ ] English Translation
 
 # Launch
-使用如下命令安装并运行：
+使用如下命令安装：
 ```
 git clone https://github.com/nhjydywd/segment-anything-qt-gui
 
 cd segment-anything-qt-gui
 
 pip install requirements.txt
-
-python .\src\mainwindow.py
 ```
 
-
+程序处理的图片来自workspace/images文件夹，请预先建立workspace/images文件夹，并将要分割的图片存放到该文件夹中，然后使用如下命令启动程序：
+```
+python .\src\mainwindow.py
+```
+所有图片处理完成后，需要点击右下角的“导出已处理文件”。等待数秒，即可导出对应的分割结果和掩码。
 
 # Shortcut Keys
 | 快捷键      | 功能描述 |
@@ -29,7 +31,7 @@ python .\src\mainwindow.py
 | Ctrl + S   | 保存        |
 | Ctrl + Z   | 撤回        |
 
-注意：所有图片处理完成后，需要点击右下角的“导出已处理文件”。等待数秒，即可导出对应的分割结果和掩码。
+
 
 # Features
 - 后台计算：切换图片时自动在后台计算Embedding，几乎可以做到用户无感。
