@@ -467,7 +467,12 @@ class MainWindow(QMainWindow):
 
         # 读取图片
         path = os.path.join(self.dir_images(self.path_workspace), name_current)
-        self.image = imRead(path, cv2.IMREAD_COLOR)
+        try:
+            self.image = imRead(path, cv2.IMREAD_COLOR)
+        except:
+            self.image = None
+            self.updateListWidget()
+            return
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
         self.background.createEmbeddings(self.image, name_current)
 
