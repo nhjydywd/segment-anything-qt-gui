@@ -43,4 +43,5 @@ python .\src\mainwindow.py
 
 
 # Notes
-- 程序默认采用sam-vit-h模型，需要10G显存。如需使用其它模型，可修改mainwindow.py中的model_type变量。
+- 程序默认采用sam-vit-h模型，需要10G显存。如需使用其它模型，可修改background.py中的model_type变量。
+- 程序分辨率针对1440x900和3840x2560显示器进行适配，如果在您的分辨率上表现不佳，可以在mainwindow.py的resizeUI函数中进行修改。

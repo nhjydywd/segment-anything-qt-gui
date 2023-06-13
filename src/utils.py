@@ -3,9 +3,9 @@ import numpy as np
 import cv2
 import re
 import time
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+from PyQt6.QtCore import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import *
             
 def replacePostfix(path, postfix, need_dot=True):
     path = path.split(".")[:-1]
@@ -64,7 +64,7 @@ def drawPrompts(image, points, point_labels, box):
             label = point_labels[i]
             color = (0, 255, 0) if label == 1 else (255, 0, 0)
             
-            cv2.circle(image, point, 4, color, 8)
+            cv2.circle(image, point, 3, color, 5)
     if not np.array_equal(box, None):
         left, top, right, bottom = box
         pt1 = (int(left), int(top))
@@ -112,13 +112,13 @@ def initModelByList(model:QStandardItemModel, ls):
     model.clear()
     for (i, x) in enumerate(ls):
         item = QStandardItem(f"{i+1}")
-        item.setData(x, role=Qt.UserRole)
+        item.setData(x, role=Qt.ItemDataRole.UserRole)
         model.appendRow(item)
 
 def initListByModel(model:QStandardItemModel):
     ls = []
     for i in range(model.rowCount()):
-        ls.append(model.item(i).data(role=Qt.UserRole))
+        ls.append(model.item(i).data(role=Qt.ItemDataRole.UserRole))
     return ls
     # obj.clear()
     # for i in range(target.rowCount()):

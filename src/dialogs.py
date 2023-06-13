@@ -1,7 +1,7 @@
 from enum import Enum
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+from PyQt6.QtCore import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import *
 
 
 
@@ -41,12 +41,12 @@ class BasicDialog(QDialog):
         
 
         h_layout = QHBoxLayout()
-        h_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Expanding))
+        h_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
         for name in buttons:
             btn = QPushButton(name)
             btn.clicked.connect(self.onBtn)
             h_layout.addWidget(btn)
-            h_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Expanding))
+            h_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
             
             
         v_layout = QVBoxLayout()
@@ -55,9 +55,9 @@ class BasicDialog(QDialog):
         self.setLayout(v_layout)
 
     def addLayout(self, layout):
-        self.layout().insertSpacerItem(self.layout().count()-1, QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Expanding))
+        self.layout().insertSpacerItem(self.layout().count()-1, QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
         self.layout().insertLayout(self.layout().count()-1, layout)
-        self.layout().insertSpacerItem(self.layout().count()-1, QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Expanding))
+        self.layout().insertSpacerItem(self.layout().count()-1, QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
 
     def onBtn(self):
         self.clicked_button = self.sender().text()

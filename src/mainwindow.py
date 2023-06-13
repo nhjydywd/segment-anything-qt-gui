@@ -1,9 +1,9 @@
 from cmath import sqrt
 # from types import NoneType
-from PyQt5 import uic
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+from PyQt6 import uic
+from PyQt6.QtCore import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import *
 import sys,os
 import cv2
 import numpy as np
@@ -36,6 +36,7 @@ class MainWindow(QMainWindow):
         self.dir_data = lambda workspace: ensureDir(os.path.join(workspace, "data"))
         self.dir_segments = lambda workspace: ensureDir(os.path.join(workspace, "segments"))
         self.dir_masks = lambda workspace: ensureDir(os.path.join(workspace, "masks"))
+        self.dir_masks_instance = lambda workspace: ensureDir(os.path.join(workspace, "masks_instance"))
 
         self.dir_cache = lambda: ensureDir("cache")
         self.to_cache_path = lambda path: os.path.join(self.dir_cache(), path)
@@ -113,13 +114,8 @@ class MainWindow(QMainWindow):
         self.background.sig_func.connect(self.onSigFunc)
         self.background.sig_predict_finished.connect(self.onPredictFinished)
 
-        sam = {
-            "vit_b":"models/SAM/sam_vit_b_01ec64.pth",
-            "vit_l":"models/SAM/sam_vit_l_0b3195.pth",
-            "vit_h":"models/SAM/sam_vit_h_4b8939.pth"
-        }
-        model_type = "vit_h"
-        self.background.loadSAM(model_type, sam[model_type])
+
+        self.background.loadSAM()
 
         self.resizeUI()
 
@@ -155,7 +151,7 @@ class MainWindow(QMainWindow):
         idx = self.ls_data.item(self.ls_data.rowCount()-1).text()
         idx = int(idx)+1
         item = QStandardItem(f"{idx}")
-        item.setData(SAMData(), role=Qt.UserRole)
+        item.setData(SAMData(), role=Qt.ItemDataRole.UserRole)
         self.ls_data.appendRow(item)
         self.cbbObject.setCurrentIndex(self.cbbObject.count()-1)
 
@@ -267,7 +263,7 @@ class MainWindow(QMainWindow):
             # Ctrl + 鼠标左键画框，这里是松开左键的逻辑，松开无需Ctrl
             if event.type() == QMouseEvent.Type.MouseButtonRelease:
                 
-                if mouse_event.button() != Qt.LeftButton:
+                if mouse_event.button() != Qt.MouseButton.LeftButton:
                     return super().eventFilter(obj, event)
                 if self.box_start_point != None and self.box_end_point != None:
                     self.backupData()
@@ -297,9 +293,10 @@ class MainWindow(QMainWindow):
                 else:
                     self.backupData()
                     label = None
-                    if mouse_event.buttons() == Qt.LeftButton:
+                    
+                    if mouse_event.buttons() == Qt.MouseButton.LeftButton:
                         label = 1
-                    elif mouse_event.buttons() == Qt.RightButton:
+                    elif mouse_event.buttons() == Qt.MouseButton.RightButton:
                         label = 0
                     else:
                         return super().eventFilter(obj, event)
@@ -319,7 +316,7 @@ class MainWindow(QMainWindow):
                 temp_input_labels = data.input_labels.copy()
                 temp_input_box = data.input_box.copy() if data.input_box is not None else None
                 if event.modifiers()==Qt.KeyboardModifier.ControlModifier:
-                    if mouse_event.buttons() == Qt.LeftButton and self.box_start_point != None:
+                    if mouse_event.buttons() == Qt.MouseButton.LeftButton and self.box_start_point != None:
                         pts = np.array([self.box_start_point[0], self.box_start_point[1], self.box_end_point[0], self.box_end_point[1]])
                         temp_input_box = self.mapCoords(pts, data2view=False)
                     else:
@@ -348,7 +345,7 @@ class MainWindow(QMainWindow):
             elif event.key() == Qt.Key.Key_Z and event.modifiers()==Qt.KeyboardModifier.ControlModifier:
                 self.onBtnWithdraw()
             # Ctrl + S 保存
-            elif event.key() == Qt.Key_S and event.modifiers()==Qt.KeyboardModifier.ControlModifier:
+            elif event.key() == Qt.Key.Key_S and event.modifiers()==Qt.KeyboardModifier.ControlModifier:
                 self.onBtnSave()
             else:
                 return super().eventFilter(obj, event)
@@ -595,7 +592,7 @@ class MainWindow(QMainWindow):
         
         ls_mask, ls_invert = [],[]
         for i in range(self.ls_data.rowCount()):
-            d:SAMData = self.ls_data.item(i).data(role=Qt.UserRole)
+            d:SAMData = self.ls_data.item(i).data(role=Qt.ItemDataRole.UserRole)
             if np.array_equal(d.masks, None):
                 continue
             ls_mask.append(d.masks[0])
@@ -640,13 +637,6 @@ class MainWindow(QMainWindow):
         ans = InformationDialog.confirmInfo(self, title=self.tr("导出设置"), ls_info=ls_info)
         if ans != BasicDialog.Accepted:
             return
-        # todo
-        # (Done)对每一张已完成的图片进行导出3个文件（图片，分割图，掩码）
-        # (Done)图片的分辨率由之前确定的输出选项决定
-        # 如果遇到已存在的文件，则询问是否替换
-        # 询问对话框有4个选项："替换", "全部替换", "跳过", "全部跳过"
-        # 如果选择"全部替换"，则后续所有已存在的文件都替换；如果选择"全部跳过"，则后续所有已存在的文件都跳过
-        # (Done)导出完成后，显示“已将xx张图片的处理结果导出到xxxx”
         for name in ls_name_finished:  
             path_image = os.path.join(self.dir_images(self.path_workspace), name)
             
@@ -660,13 +650,22 @@ class MainWindow(QMainWindow):
             with open(path_data, "rb") as f:
                 ls_samdata, idx_data = pickle.load(f)
             ls_mask, ls_invert = [],[]
-            for samdata in ls_samdata:
+            for idx, samdata in enumerate(ls_samdata):
                 ls_mask.append(samdata.masks[0])
                 ls_invert.append(samdata.invertMask)
+                # mask_instance
+                mask = samdata.masks[0]
+                mask_out = imResizeUndeformed(mask, maskSize[0], maskSize[1], cv2.INTER_NEAREST) if None not in maskSize else mask
+                path_instance = os.path.join(self.dir_masks_instance(path_export), replacePostfix(name, f"_{idx}.png", False))
+                imWrite(path_instance, mask_out*255)
+
             mask_final = mergeMasks(ls_mask, ls_invert).astype("uint8")
             mask_final_out =  imResizeUndeformed(mask_final, maskSize[0], maskSize[1], cv2.INTER_NEAREST) if None not in maskSize else mask_final
             path_out = os.path.join(self.dir_masks(path_export), replacePostfix(name, "png"))
             imWrite(path_out, mask_final_out*255)
+
+            
+
             # segment
             if self.ckbExportExpand.isChecked():
                 step = 5
@@ -727,18 +726,30 @@ class MainWindow(QMainWindow):
         return coords * scale_factor
 
     def resizeUI(self):
-        desktop = QApplication.desktop()
-        HR = desktop.width() >= 3000 and desktop.height() >= 2160
-        if HR:
-            self.setMinimumSize(2500, 2000)
+        screen = QGuiApplication.primaryScreen().geometry()  # 获取屏幕类并调用geometry()方法获取屏幕大小
+        width = screen.width()  # 获取屏幕的宽
+        height = screen.height()  # 获取屏幕的高
+        # desktop = QApplication.desktop()
+
+        minimumBtnSize = self.btnAddObject.minimumSize()
+        minimumWndSize = self.minimumSize()
+        if width >= 1920 and height >= 1080:
+            minimumBtnSize = QSize(150,60)
+            minimumWndSize = (1400,900)
+        elif width >= 3000 and height >= 2160:
+            minimumBtnSize = QSize(250, 80)
+            minimumWndSize = QSize(2500, 2000)
+        
+        self.setMinimumSize(minimumWndSize)
+
         font = QFont()
         font.setFamily("Tahoma") 
         font.setPointSize(12)  
         def setFont(widget):
             if isinstance(widget, QWidget):
                 widget.setFont(font)
-            if isinstance(widget, QPushButton) and HR:
-                widget.setMinimumSize(250, 80)
+            if isinstance(widget, QPushButton):
+                widget.setMinimumSize(minimumBtnSize)
         traverseChildren(self.wgtOperation, setFont)
         font.setPointSize(10)
         self.listWidget.setFont(font)
@@ -751,4 +762,4 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)    # 创建QApplication对象，作为GUI主程序入口
     window = MainWindow()
     window.show()               # 显示主窗体
-    sys.exit(app.exec_())   # 循环中等待退出程序
+    sys.exit(app.exec())   # 循环中等待退出程序

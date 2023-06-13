@@ -1,7 +1,7 @@
-from PyQt5 import uic
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+from PyQt6 import uic
+from PyQt6.QtCore import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import *
 import torch
 import numpy as np
 import time
@@ -75,12 +75,25 @@ class Background(QObject):
                 self.thread = BackgroundThread(self.mainwindow)
                 self.thread.start()
                 
-    def loadSAM(self, model_type, path):
-        self.enqueue(self.__loadSAM__, False, model_type, path)
-    def __loadSAM__(self, model_type, path):
+    def loadSAM(self):
+        self.enqueue(self.__loadSAM__, False)
+    def __loadSAM__(self):
         start = time.time()
         self.sig_func.emit([self.setStatusBar,"Loading SAM......"])
-        device = "cuda"
+        sam = {
+            "vit_b":"models/SAM/sam_vit_b_01ec64.pth",
+            "vit_l":"models/SAM/sam_vit_l_0b3195.pth",
+            "vit_h":"models/SAM/sam_vit_h_4b8939.pth"
+        }
+        if torch.cuda.is_available():
+            device = "cuda"
+            model_type = "vit_h"
+        else:
+            device = "cpu"
+            model_type = "vit_b"
+            if torch.backends.mps.is_available():
+                device = "mps"
+        path = sam[model_type]
         self.sam = sam_model_registry[model_type](checkpoint=path)
         self.sam.to(device=device)
         self.predictor = SamPredictor(self.sam)

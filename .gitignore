@@ -3,3 +3,5 @@
 **/**.pkl
 **/__pycache__
 workspace*
+*.pth
+cache
