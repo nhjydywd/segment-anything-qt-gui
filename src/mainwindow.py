@@ -735,7 +735,7 @@ class MainWindow(QMainWindow):
         minimumWndSize = self.minimumSize()
         if width >= 1920 and height >= 1080:
             minimumBtnSize = QSize(150,60)
-            minimumWndSize = (1400,900)
+            minimumWndSize = QSize(1400,900)
         elif width >= 3000 and height >= 2160:
             minimumBtnSize = QSize(250, 80)
             minimumWndSize = QSize(2500, 2000)
